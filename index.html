@@ -122,8 +122,14 @@ function show(rank){
   overlay.setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
   document.querySelector('#close').focus({preventScroll:true});
-  // Aproximadamente 1 s de pausa al abrir una carta nueva (0,69 + 0,27 s).
-  volumeTimer=setTimeout(()=>{if(currentRank===rank)audio.volume=1},reduceMotion.matches?60:270);
+  // Aproximadamente 1 s de pausa en TOP 10–2; 1,8 s en TOP 1.
+  const extraPause=reduceMotion.matches?60:(rank===1?1800:270);
+  volumeTimer=setTimeout(()=>{
+    if(currentRank!==rank)return;
+    // La pista sonaba en silencio durante la animación: reiniciarla evita perder palabras.
+    try{if(audio.readyState>0)audio.currentTime=0}catch(e){}
+    audio.volume=1;
+  },extraPause);
 }
 function close(){
   clearTimeout(volumeTimer);
