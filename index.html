@@ -2,14 +2,164 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500&display=swap');
 :root{font-family:'DM Sans',sans-serif;color:#77525d;background:#fffaf9}*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 0%,#fff2f1,transparent 55%),#fffaf9}button{font:inherit;cursor:pointer}main{max-width:540px;margin:auto;padding:52px 22px 45px;text-align:center}.heart{font-size:26px;color:#c78b99}h1{font-family:'Playfair Display',serif;font-weight:400;font-size:clamp(37px,10vw,58px);line-height:1.12;margin:13px 0 28px;color:#b87988}h1 span{display:block;font-size:.54em;letter-spacing:.15em;margin-top:8px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.tile{position:relative;aspect-ratio:.69;border:0;padding:0;border-radius:13px;background:transparent;perspective:800px}.inner{display:block;width:100%;height:100%;position:relative;transition:transform .65s cubic-bezier(.2,.75,.25,1);transform-style:preserve-3d}.tile.open .inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;overflow:hidden;box-shadow:0 7px 17px #b9768330}.back{background:linear-gradient(145deg,#f3bcb5,#e8a6a4);border:5px solid #f5c9c1;outline:1px solid #e6a8a4;outline-offset:-9px;display:grid;place-items:center;color:#fff7f3}.back:after{content:'';position:absolute;inset:13px;border:1px solid #fff8f3aa;border-radius:6px;pointer-events:none}.back svg{width:49%;stroke-width:1.5}.front{transform:rotateY(180deg);background:#f7e9e9}.front img{width:100%;height:100%;object-fit:cover}.front b{position:absolute;bottom:7px;left:7px;background:#fff9f2ed;border-radius:9px;padding:5px 8px;color:#a66b7b;font-size:12px}.hint{font-family:'Playfair Display',serif;font-size:17px;margin:28px 0 7px}.progress{font-size:12px;color:#b48b95}.overlay{position:fixed;inset:0;z-index:10;background:#3c2637a6;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}.overlay.visible{opacity:1;pointer-events:auto}.modal{width:min(100%,440px);max-height:92dvh;overflow:auto;background:#fffaf9;border-radius:22px;padding:18px 18px 24px;box-shadow:0 18px 65px #32172255;transform:translateY(18px) scale(.97);transition:transform .3s}.overlay.visible .modal{transform:none}.topline{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.15em;color:#ae8792}.close{background:none;border:0;font-size:28px;color:#a87b87}.rank{font-family:'Playfair Display',serif;font-size:44px;color:#b97989;margin:4px 0}.name{font-family:'Playfair Display',serif;font-size:24px;color:#76515d;margin:0}.date{color:#ad8b96;font-size:13px;margin:8px 0 15px}.photo{width:100%;max-height:43dvh;object-fit:contain;background:#f6ecec;border-radius:12px;display:block}.audio{background:#f9eded;border-radius:12px;margin-top:14px;padding:12px;text-align:left}.audio p{font-size:13px;margin:0 0 8px}.audio audio{width:100%;height:38px}.missing{font-size:12px;color:#b28b96}.primary{background:#b97989;border:0;border-radius:11px;padding:13px 20px;color:white;width:100%;margin-top:15px}.final{display:none;text-align:center;padding:40px 0}.final.show{display:block}.final button{border:1px solid #dfb5bc;background:#fff0f1;border-radius:20px;padding:30px 36px;font-family:'Playfair Display',serif;font-size:27px;color:#b97989;box-shadow:0 8px 25px #b9798929}.restart{border:0;background:transparent;color:#a77b87;text-decoration:underline;margin-top:20px}.small{font-size:13px;color:#aa8791}@media(max-width:370px){main{padding:30px 13px}.grid{gap:10px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
-</style></head><body><main><div class="heart">♡</div><h1>TOP 10<span>MOMENTOS JUNTOS</span></h1><div class="grid" id="grid"></div><div id="ending" class="final"><p>Hay un recuerdo que guardé para el final…</p><button id="finalBtn">♡ Descubrir TOP 1</button><p><button class="restart" id="restart">Volver a empezar</button></p></div><p class="hint" id="hint">Toca una carta para descubrir un recuerdo</p><p class="progress" id="progress">0 de 9 recuerdos descubiertos</p></main><div class="overlay" id="overlay" aria-hidden="true"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="title"><div class="topline"><span>NUESTROS RECUERDOS</span><button class="close" id="close" aria-label="Cerrar">×</button></div><div class="rank" id="rank"></div><h2 class="name" id="title"></h2><p class="date" id="date"></p><img class="photo" id="photo" alt="Nuestro recuerdo"><div class="audio"><p>♡ Un mensaje para ti</p><audio id="audio" controls preload="none"></audio><div class="missing" id="missing">Próximamente escucharás mi voz aquí.</div></div><button class="primary" id="return">Volver a las cartas</button></section></div><script>
+
+/* Ajustes de interacción: ligeros en móviles y respetuosos con movimiento reducido */
+.tile{-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .22s ease}
+.tile:not(.open):active{transform:scale(.975)}
+.tile:focus-visible,.close:focus-visible,.primary:focus-visible,#finalBtn:focus-visible,.audio-start:focus-visible{outline:3px solid #b97989;outline-offset:4px}
+.inner{transition:transform .66s cubic-bezier(.2,.73,.2,1);will-change:transform}
+.overlay{visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s}
+.overlay.visible{visibility:visible;transition:opacity .3s ease}
+.modal{transform:translate3d(0,20px,0) scale(.975);transition:transform .38s cubic-bezier(.2,.8,.2,1);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.overlay.visible .modal{transform:translate3d(0,0,0) scale(1)}
+.grid{transition:opacity .5s ease,filter .5s ease,transform .5s ease}
+.grid.complete{opacity:.78;filter:saturate(.83);transform:scale(.99)}
+.final.show{animation:final-rise .65s cubic-bezier(.2,.8,.2,1) both}
+#finalBtn{transition:transform .2s ease,box-shadow .2s ease;animation:final-breathe 3s ease-in-out infinite}
+#finalBtn:active{transform:scale(.98)}
+.primary,.close{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.audio audio[hidden],.audio-start[hidden],.missing[hidden]{display:none}
+.audio-start{display:block;width:100%;border:1px solid #dbacb8;background:#fffafb;color:#995a6c;border-radius:10px;padding:10px 13px;margin:9px 0 0;text-align:center;font-weight:600}
+.photo{animation:photo-reveal .34s ease both}
+@keyframes final-rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes final-breathe{0%,100%{box-shadow:0 8px 25px #b9798929}50%{box-shadow:0 10px 30px #b9798945}}
+@keyframes photo-reveal{from{opacity:.55;transform:scale(.99)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style></head><body><main><div class="heart">♡</div><h1>TOP 10<span>MOMENTOS JUNTOS</span></h1><div class="grid" id="grid"></div><div id="ending" class="final"><p>Hay un recuerdo que guardé para el final…</p><button id="finalBtn">♡ Descubrir TOP 1</button><p><button class="restart" id="restart">Volver a empezar</button></p></div><p class="hint" id="hint">Toca una carta para descubrir un recuerdo</p><p class="progress" id="progress" aria-live="polite">0 de 9 recuerdos descubiertos</p></main><div class="overlay" id="overlay" aria-hidden="true"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="title"><div class="topline"><span>NUESTROS RECUERDOS</span><button class="close" id="close" aria-label="Cerrar">×</button></div><div class="rank" id="rank"></div><h2 class="name" id="title"></h2><p class="date" id="date"></p><img class="photo" id="photo" alt="Nuestro recuerdo"><div class="audio"><p>♡ Un mensaje para ti</p><audio id="audio" controls preload="none" hidden></audio><button class="audio-start" id="audioStart" type="button" hidden>▶ Escuchar mi mensaje</button><div class="missing" id="missing" role="status">Próximamente escucharás mi voz aquí.</div></div><button class="primary" id="return">Volver a las cartas</button></section></div><script>
 const memories={10:['Tirar nomás creo','4 de julio'],9:['Blogcitos','8 de agosto'],8:['Halloween','31 de octubre – 1 de noviembre'],7:['Escapar un martes','7 de septiembre'],6:['La mejor foto','23 de marzo'],5:['Grachi y primer día','13 de enero'],4:['Casa de Cielo — primera vez','13 de junio'],3:['Regalito y día completo','2 de octubre'],2:['Melody — cumple de Mila','11 de abril'],1:['Universidad','20 de enero']};
-const grid=document.querySelector('#grid'),overlay=document.querySelector('#overlay'),audio=document.querySelector('#audio');let count=0,opened={},busy=false;
+const grid=document.querySelector('#grid');
+const overlay=document.querySelector('#overlay');
+const modal=overlay.querySelector('.modal');
+const audio=document.querySelector('#audio');
+const missing=document.querySelector('#missing');
+const audioStart=document.querySelector('#audioStart');
+const ending=document.querySelector('#ending');
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+let count=0,opened={},busy=false,currentRank=null,audioAttempt=0,volumeTimer=null;
 const heart='<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"><path d="M50 78C32 62 15 48 15 32c0-18 23-25 35-5 12-20 35-13 35 5 0 16-17 30-35 46Z"/><path d="M50 15v8M50 83v7"/></svg>';
-for(let i=0;i<9;i++){let b=document.createElement('button');b.className='tile';b.setAttribute('aria-label','Descubrir carta '+(i+1));b.innerHTML='<span class="inner"><span class="face back">'+heart+'</span><span class="face front"><img alt=""><b></b></span></span>';b.addEventListener('click',()=>choose(i,b));grid.append(b)}
-function choose(i,b){if(busy)return;if(opened[i]){show(opened[i]);return}if(count>=9)return;busy=true;const rank=10-count;opened[i]=rank;count++;b.classList.add('open');b.querySelector('img').src=`fotos/top-${rank}.jpg`;b.querySelector('b').textContent=`TOP ${rank}`;document.querySelector('#progress').textContent=`${count} de 9 recuerdos descubiertos`;setTimeout(()=>{show(rank);busy=false},440)}
-function show(n){const m=memories[n];document.querySelector('#rank').textContent='TOP '+n;document.querySelector('#title').textContent=m[0];document.querySelector('#date').textContent=m[1];document.querySelector('#photo').src=`fotos/top-${n}.jpg`;audio.pause();audio.removeAttribute('src');audio.load();document.querySelector('#missing').style.display='block';// Añade archivos audio/top-10.mp3 ... audio/top-1.mp3 para habilitar reproducción.
-const src=`audio/top-${n}.mp3`;fetch(src,{method:'HEAD'}).then(r=>{if(r.ok){audio.src=src;document.querySelector('#missing').style.display='none';audio.play().catch(()=>{})}}).catch(()=>{});overlay.classList.add('visible');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}
-function close(){audio.pause();audio.currentTime=0;overlay.classList.remove('visible');overlay.setAttribute('aria-hidden','true');document.body.style.overflow='';if(count===9){document.querySelector('#ending').classList.add('show');document.querySelector('#hint').style.display='none';document.querySelector('#progress').style.display='none'}}
-document.querySelector('#close').onclick=close;document.querySelector('#return').onclick=close;document.querySelector('#finalBtn').onclick=()=>show(1);document.querySelector('#restart').onclick=()=>location.reload();document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('visible'))close()});
+for(let i=0;i<9;i++){
+  const b=document.createElement('button');
+  b.className='tile';
+  b.setAttribute('aria-label','Descubrir carta '+(i+1));
+  b.innerHTML='<span class="inner"><span class="face back">'+heart+'</span><span class="face front"><img alt=""><b></b></span></span>';
+  b.addEventListener('click',()=>choose(i,b));
+  grid.append(b);
+}
+function prepareAudio(rank){
+  // CRÍTICO PARA ANDROID: play() se llama dentro del mismo gesto de tocar la carta,
+  // no dentro de setTimeout, fetch().then() ni tras la animación.
+  clearTimeout(volumeTimer);
+  const attempt=++audioAttempt;
+  audio.pause();
+  audio.hidden=true;
+  audioStart.hidden=true;
+  missing.hidden=false;
+  missing.textContent='Preparando tu mensaje…';
+  audio.src=`audio/top-${rank}.mp3`;
+  audio.preload='auto';
+  // Inicia el sonido a volumen cero durante el volteo; se recupera al abrir el recuerdo.
+  audio.muted=false;
+  audio.volume=0;
+  audio.onloadedmetadata=()=>{
+    if(attempt!==audioAttempt)return;
+    audio.hidden=false;
+    missing.hidden=true;
+  };
+  audio.onerror=()=>{
+    if(attempt!==audioAttempt)return;
+    audio.hidden=true;
+    audioStart.hidden=true;
+    missing.hidden=false;
+    missing.textContent='Próximamente escucharás mi voz aquí.';
+  };
+  const promise=audio.play();
+  if(promise&&typeof promise.catch==='function')promise.catch(err=>{
+    if(attempt!==audioAttempt||err.name==='AbortError')return;
+    if(err.name==='NotAllowedError'){
+      audioStart.hidden=false;
+      missing.hidden=false;
+      missing.textContent='Tu navegador necesita un toque para reproducir el audio.';
+    }else if(!audio.error){
+      audioStart.hidden=false;
+      missing.hidden=false;
+      missing.textContent='Toca para escuchar tu mensaje.';
+    }
+  });
+}
+function choose(i,b){
+  if(busy||overlay.classList.contains('visible'))return;
+  if(opened[i]){
+    const rank=opened[i];
+    prepareAudio(rank);
+    show(rank);
+    return;
+  }
+  if(count>=9)return;
+  busy=true;
+  const rank=10-count;
+  opened[i]=rank;
+  count++;
+  // Se solicita la reproducción aquí, directamente desde el toque del usuario.
+  prepareAudio(rank);
+  b.classList.add('open');
+  b.setAttribute('aria-label',`Ver de nuevo el TOP ${rank}`);
+  b.querySelector('img').src=`fotos/top-${rank}.jpg`;
+  b.querySelector('b').textContent=`TOP ${rank}`;
+  document.querySelector('#progress').textContent=`${count} de 9 recuerdos descubiertos`;
+  setTimeout(()=>{show(rank);busy=false},reduceMotion.matches?35:690);
+}
+function show(rank){
+  currentRank=rank;
+  const m=memories[rank];
+  document.querySelector('#rank').textContent='TOP '+rank;
+  document.querySelector('#title').textContent=m[0];
+  document.querySelector('#date').textContent=m[1];
+  const photo=document.querySelector('#photo');
+  photo.src=`fotos/top-${rank}.jpg`;
+  photo.alt=`Fotografía del TOP ${rank}: ${m[0]}`;
+  modal.scrollTop=0;
+  overlay.classList.add('visible');
+  overlay.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  document.querySelector('#close').focus({preventScroll:true});
+  // Aproximadamente 1 s de pausa al abrir una carta nueva (0,69 + 0,27 s).
+  volumeTimer=setTimeout(()=>{if(currentRank===rank)audio.volume=1},reduceMotion.matches?60:270);
+}
+function close(){
+  clearTimeout(volumeTimer);
+  audioAttempt++;
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+  audio.volume=1;
+  currentRank=null;
+  overlay.classList.remove('visible');
+  overlay.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+  if(count===9){
+    grid.classList.add('complete');
+    ending.classList.add('show');
+    document.querySelector('#hint').style.display='none';
+    document.querySelector('#progress').style.display='none';
+    requestAnimationFrame(()=>ending.scrollIntoView({behavior:reduceMotion.matches?'instant':'smooth',block:'center'}));
+  }
+}
+audioStart.addEventListener('click',()=>{
+  audio.volume=1;
+  const p=audio.play();
+  if(p&&typeof p.then==='function')p.then(()=>{
+    audioStart.hidden=true;
+    missing.hidden=true;
+  }).catch(()=>{missing.textContent='No se pudo reproducir. Prueba con el control de audio.'});
+});
+document.querySelector('#close').addEventListener('click',close);
+document.querySelector('#return').addEventListener('click',close);
+document.querySelector('#finalBtn').addEventListener('click',()=>{
+  // También es un gesto real: aprovecha su toque para habilitar audio en Android.
+  prepareAudio(1);
+  show(1);
+});
+document.querySelector('#restart').addEventListener('click',()=>location.reload());
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('visible'))close()});
+
 </script></body></html>
